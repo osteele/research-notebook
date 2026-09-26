@@ -1,5 +1,5 @@
 {
-  "schema_version": 6,
+  "schema_version": 7,
   "required_files": [
     "STATUS.md",
     "QUESTIONS.md",
@@ -36,6 +36,8 @@
   "experiment": {
     "annex_suffix": ".annex.md",
     "informed_by_section": "Informed by",
+    "money_pattern": "(?<![\\\\\\w])\\$\\s?\\d[\\d,]*(?:\\.\\d+)?(?![\\d^_{])|\\bUSD\\b|_usd(?:_|\\b)",
+    "math_span_pattern": "\\$[^$\\n]*[\\\\^_{}][^$\\n]*\\$",
     "estimand": {
       "heading_pattern": "^#{2,4}\\s+E\\d+\\b",
       "registration_field": "Registration",
@@ -135,6 +137,27 @@
       {"id": "gated-follow-up", "label": "Follow-up approval", "when": "before a gated follow-up"},
       {"id": "claim-promotion", "label": "Claim promotion review", "when": "before strengthening a claim"}
     ]
+  },
+  "spend": {
+    "directory": "plans/spend",
+    "authority_file": "AUTHORITY.json",
+    "authority_schema": "plan-spend-authority/v1",
+    "authority_required_fields": ["shared_ceiling_usd", "authorized_by", "recorded_utc"],
+    "ledger_file": "LEDGER.md",
+    "ledger_columns": ["Row", "Date", "Plan", "Experiment", "Attempt", "Job", "Phase", "Committed USD", "Actual USD", "Outcome"],
+    "open_outcomes": ["authorized", "running"],
+    "terminal_outcomes": ["complete", "failed", "canceled", "operational-void", "correction"],
+    "provisional_suffix": "/provisional",
+    "no_plan": "-"
+  },
+  "review_ledger": {
+    "file": "REVIEW-LEDGER.md",
+    "register_heading": "Review register",
+    "register_columns": ["ID", "Date", "Kind", "Target", "Reviewer", "Relation", "Findings"],
+    "findings_heading": "Open findings",
+    "finding_columns": ["ID", "Fault", "Caught by", "Severity", "Status"],
+    "relations": ["self", "same model, no shared context", "different model", "human"],
+    "severities": ["silent", "loud"]
   },
   "ledger": {
     "schema_version": 1,

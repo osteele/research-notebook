@@ -225,13 +225,15 @@ Interpretation, scope, and threats to validity.
 Links only to syntheses that use more than this experiment.
 ```
 
-## Cost and resources
+## Resources
 
-Keep per-attempt usage and cost evidence beside `## Runs`, optionally under
-`## Cost and resources`. This is a human-readable recording pattern, not a new
-required heading, Runs column, or parsed schema. The plan's
-[Budget and accounting](plans.md#budget-and-accounting) owns estimates,
-approved limits, scope changes, and linked as-of rollups.
+Keep per-attempt resource evidence beside `## Runs`, optionally under
+`## Resources`. Record units, never money: compute quantity and device, elapsed
+time, calls and tokens, and retained bytes. Money for each attempt is a row in
+`plans/spend/LEDGER.md`, keyed by the same attempt identity; ceilings are in
+`plans/spend/AUTHORITY.json`. See [Spend and units](spend.md). This is a
+human-readable recording pattern, not a new required heading, Runs column, or
+parsed schema.
 
 Key evidence by the existing Backend + Job ID pair. Give manual runs a stable
 attempt identity and retain it with their command and output location. Each
@@ -239,43 +241,20 @@ retry is a separate attempt linked to the failed one, including retries hidden
 inside a backend's parent job. Where the source cannot separate attempts,
 record that limitation and the parent total without inventing a split.
 
-For each attempt, record available resource quantities and monetary amounts,
-their units, source identity or retained artifact, and retrieval timestamp.
-Distinguish provider-reported charges from usage-based estimates, and billed
-amounts from provisional ones. An estimate needs the quantity, rate, rate date,
-currency, billing unit, and calculation basis. State the time interval and
-billing scope so a later bill can be matched to the same usage. Keep elapsed
-time and human effort separate from compute quantity and money.
+For each attempt, record the available quantities and their units, the source
+identity or retained artifact, and the retrieval timestamp. State the time
+interval so a later usage report can be matched to the same attempt. A process
+duration is not necessarily a provisioned-resource duration. Include failed,
+canceled, and partial attempts, setup, and idle time. Record unknown usage as
+unknown, with the reason and the next retrieval check; a missing source is not
+evidence of zero use. Follow the source mapping in
+[RUNNER.md](job-runners.md#usage-and-billing-sources) rather than inferring
+usage from job status alone.
 
-Include failed, canceled, and partial attempts, setup, and billable idle time.
-A process duration is not necessarily a provisioned-resource duration. Record
-unknown charges as unknown, with the reason, follow-up owner, and next retrieval
-or settlement check. A missing source is not evidence of zero cost. Follow the
-supported source mapping in [RUNNER.md](job-runners.md#usage-and-billing-sources)
-rather than inferring billing from job status alone.
-
-Shared storage, transfers, or provisioned resources need an explicit attribution
-policy. Name the source charge once, the owning experiment record, the covered
-attempts or experiments, and how the total is allocated. Other records link that
-source and state their share. The plan counts each charge once and exposes any
-unallocated remainder. When a bill bundles usage that individual attempt
-estimates already cover, reconcile those estimates before including the bill.
-
-Preserve corrections as dated history. State which prior amount and scope the
-new evidence supersedes; include only the current amount in the current rollup.
-Keep distinct estimates, interim provider reports, and final bills traceable
-without treating each report as a new charge. A correction to one interval
-does not replace unrelated usage.
-
-Use the plan's nonoverlapping A/C/U accounting at a common as-of time. A running
-attempt contributes its incurred portion to A and only its forecast remainder
-to C. Requesting cancellation does not remove that remainder: reduce C only
-after cancellation is confirmed, and keep fees or unknown billing visible.
-
-Scientific processing can finish while billing remains pending. Record the
-available evidence, gaps, and named follow-up before the durable update and
-processed mark. Keep financial settlement explicitly pending without changing
-the scientific status vocabulary or implying that final charges are known.
+Preserve corrections as dated history, stating which prior figure the new
+evidence supersedes. A record that names its job ids loses nothing by omitting
+their cost: the runner or provider holds the charge per job, and the ledger
+holds it per plan.
 
 ## Before running
 
@@ -311,8 +290,8 @@ only the durability step differs.
 4. **Pause for human review** of the analysis, interpretation, and any proposed
    follow-up branch. Then update question, status, index, priority, claim, and
    publication pointers that the result changes.
-5. **Capture cost and resource evidence.** Follow
-   [Cost and resources](#cost-and-resources) for every attempt, including failed
+5. **Capture resource evidence.** Follow
+   [Resources](#resources) for every attempt, including failed
    and partial runs. Link the sources and retrieval time, distinguish estimates
    from bills, and update the owning plan's as-of forecast when authorized.
    Record missing evidence and its follow-up owner; delayed billing does not

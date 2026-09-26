@@ -21,6 +21,8 @@ SITE_PAGES = (
     Path("src/pages/reference/index.astro"),
     Path("src/pages/reference/experiments/index.astro"),
     Path("src/pages/reference/plans/index.astro"),
+    Path("src/pages/reference/spend/index.astro"),
+    Path("src/pages/reference/review-ledger/index.astro"),
 )
 
 
@@ -62,6 +64,11 @@ def main() -> int:
         "notebookSchema.claim.roles",
         "notebookSchema.human_review.checkpoints",
         "notebookSchema.ledger.required_fields",
+        "notebookSchema.spend.ledger_columns",
+        "notebookSchema.spend.open_outcomes",
+        "notebookSchema.spend.terminal_outcomes",
+        "notebookSchema.review_ledger.register_columns",
+        "notebookSchema.review_ledger.relations",
     )
     missing = [fragment for fragment in expected_fragments if fragment not in rendered]
     if missing:

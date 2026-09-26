@@ -110,11 +110,10 @@ it does not waive later gates.
    and the preregistration before outcome inspection. An agent's own review is
    not human approval. If a required decision or permission is absent, stop at
    that boundary; a mode selection is not approval.
-   Before each submission or retry, check the plan's
-   [Budget and accounting](plans.md#budget-and-accounting): the approved scope,
-   dated limits, available incurred evidence, and nonoverlapping A + C + U
-   forecast. C includes only the additional remainder of running or submitted
-   work. Headroom after commitments must still cover planned U; an underspend
+   Before each submission or retry, check the plan's spend authority and
+   ledger ([Spend and units](spend.md#deriving-the-account)): the approved
+   ceiling, incurred A, committed C, and the planned remainder U priced at a
+   current rate. Headroom after commitments must still cover planned U; an underspend
    grants no new scope. Use a conservative admission bound for concurrent jobs
    and permitted retries, coordinate reservations against shared limits, and
    check which limits the runner actually enforces. Stop when exposure exceeds
@@ -130,11 +129,10 @@ it does not waive later gates.
    analysis and interpretation before synthesis or publication use. A proposed
    follow-up, including one selected by a decision rule, requires the human
    approval specified by the notebook before submission.
-   Capture available per-attempt cost evidence and unresolved billing before
-   the durable update and processed mark. Scientific processing can close with
-   billing pending if its gaps and follow-up owner are recorded. Refresh the
-   plan's dated rollup without adding interim estimates and later bills for the
-   same usage.
+   Capture per-attempt usage in the record and money in the spend ledger
+   before the durable update and processed mark. Scientific processing can
+   close with billing pending if its gaps and follow-up owner are recorded. A
+   later bill is a ledger correction carrying the difference, not new spend.
 5. Report according to the selected mode. In stepped mode, first explain the
    original rationale, setup, controls, predictions, and null criterion; then
    present observed results, deviations, interpretation, and the proposed next
@@ -149,8 +147,8 @@ it does not waive later gates.
    pointers. Account for running jobs and artifact durability; a conversational
    pause does not cancel a job or authorize leaving additional work running.
    Do not mark an unfinished plan completed merely because the session ended.
-   Reconcile against the original baseline and link cost sources, variance,
-   remaining commitments, and pending settlement. Reduce a canceled job's
+   Reconcile resources against the original baseline in units, and name
+   remaining ledger commitments and pending settlement. Reduce a canceled job's
    remaining commitment only after confirmation; retain fees and billing
    unknowns. Carry revised assumptions into any proposed successor without
    launching it.

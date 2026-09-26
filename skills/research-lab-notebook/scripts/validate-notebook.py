@@ -52,6 +52,29 @@ CLAIM_PAPER_PATH_RE = re.compile(
 )
 MARKDOWN_LINK_RE = re.compile(r"\[[^]]+\]\(([^)]+)\)")
 
+SPEND_DIR = Path(SCHEMA["spend"]["directory"])
+SPEND_AUTHORITY_FILE = SCHEMA["spend"]["authority_file"]
+SPEND_AUTHORITY_SCHEMA = SCHEMA["spend"]["authority_schema"]
+SPEND_AUTHORITY_FIELDS = tuple(SCHEMA["spend"]["authority_required_fields"])
+SPEND_LEDGER_FILE = SCHEMA["spend"]["ledger_file"]
+SPEND_LEDGER_COLUMNS = SCHEMA["spend"]["ledger_columns"]
+SPEND_OPEN_OUTCOMES = set(SCHEMA["spend"]["open_outcomes"])
+SPEND_TERMINAL_OUTCOMES = set(SCHEMA["spend"]["terminal_outcomes"])
+SPEND_PROVISIONAL_SUFFIX = SCHEMA["spend"]["provisional_suffix"]
+SPEND_NO_PLAN = SCHEMA["spend"]["no_plan"]
+SPEND_ROW_ID_RE = re.compile(r"^S\d+$")
+SPEND_AMOUNT_RE = re.compile(r"^\d+(?:\.\d+)?$")
+MONEY_RE = re.compile(SCHEMA["experiment"]["money_pattern"])
+MATH_SPAN_RE = re.compile(SCHEMA["experiment"]["math_span_pattern"])
+REVIEW_LEDGER_FILE = SCHEMA["review_ledger"]["file"]
+REVIEW_REGISTER_HEADING = SCHEMA["review_ledger"]["register_heading"]
+REVIEW_REGISTER_COLUMNS = SCHEMA["review_ledger"]["register_columns"]
+REVIEW_FINDINGS_HEADING = SCHEMA["review_ledger"]["findings_heading"]
+REVIEW_FINDING_COLUMNS = SCHEMA["review_ledger"]["finding_columns"]
+REVIEW_RELATIONS = set(SCHEMA["review_ledger"]["relations"])
+REVIEW_REGISTER_ID_RE = re.compile(r"^R\d+$")
+REVIEW_SUMMARY_ROW_RE = re.compile(r"^R\d+\s*[—–-]\s*R\d+$")
+
 
 @dataclass(frozen=True)
 class Issue:
@@ -536,7 +559,7 @@ def plan_paths(root: Path) -> list[Path]:
     return [
         path
         for path in sorted(plan_dir.rglob("*.md"))
-        if path.name != "README.md"
+        if path.name != "README.md" and not path.is_relative_to(root / SPEND_DIR)
     ]
 
 
@@ -713,6 +736,254 @@ def render_plan_index(root: Path) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
+def experiment_record_paths(root: Path) -> list[Path]:
+    experiment_dir = root / "experiments"
+    if not experiment_dir.is_dir():
+        return []
+    return [
+        path
+        for path in sorted(experiment_dir.glob("*.md"))
+        if path.name != "README.md" and not path.name.endswith(ANNEX_SUFFIX)
+    ]
+
+
+def table_header(lines: list[str], columns: list[str]) -> int | None:
+    return next(
+        (
+            index
+            for index, line in enumerate(lines)
+            if line.lstrip().startswith("|") and table_cells(line) == columns
+        ),
+        None,
+    )
+
+
+def validate_spend_authority(
+    path: Path,
+    authority: object,
+    known_plans: set[str],
+    issues: list[Issue],
+) -> None:
+    if not isinstance(authority, dict):
+        issues.append(Issue("ERROR", path, "authority must be a JSON object"))
+        return
+    if authority.get("schema") != SPEND_AUTHORITY_SCHEMA:
+        issues.append(Issue("ERROR", path, f"schema must be {SPEND_AUTHORITY_SCHEMA!r}"))
+    plans = authority.get("plans")
+    if not isinstance(plans, dict):
+        issues.append(Issue("ERROR", path, "plans must be an object"))
+        return
+    for stem, entry in plans.items():
+        if stem not in known_plans:
+            issues.append(Issue("ERROR", path, f"plans entry {stem!r} names no plan"))
+        if not isinstance(entry, dict):
+            issues.append(Issue("ERROR", path, f"plans entry {stem!r} must be an object"))
+            continue
+        missing = [field for field in SPEND_AUTHORITY_FIELDS if field not in entry]
+        if missing:
+            issues.append(
+                Issue(
+                    "ERROR",
+                    path,
+                    f"plans entry {stem!r} is missing fields: {', '.join(missing)}",
+                )
+            )
+        ceiling = entry.get("shared_ceiling_usd")
+        if isinstance(ceiling, bool) or not isinstance(ceiling, (int, float)) or ceiling <= 0:
+            issues.append(
+                Issue(
+                    "ERROR",
+                    path,
+                    f"plans entry {stem!r} shared_ceiling_usd must be a positive number",
+                )
+            )
+
+
+def validate_spend_ledger(
+    path: Path,
+    lines: list[str],
+    known_plans: set[str],
+    issues: list[Issue],
+) -> None:
+    header_index = table_header(lines, SPEND_LEDGER_COLUMNS)
+    if header_index is None:
+        issues.append(
+            Issue(
+                "ERROR",
+                path,
+                f"spend ledger table must use columns: {' | '.join(SPEND_LEDGER_COLUMNS)}",
+            )
+        )
+        return
+    seen_ids: set[str] = set()
+    for line_number, line in enumerate(lines[header_index + 2 :], start=header_index + 3):
+        if not line.lstrip().startswith("|"):
+            continue
+        cells = table_cells(line)
+        if len(cells) != len(SPEND_LEDGER_COLUMNS):
+            issues.append(
+                Issue(
+                    "ERROR",
+                    path,
+                    f"line {line_number}: spend ledger row has {len(cells)} cells "
+                    f"(expected {len(SPEND_LEDGER_COLUMNS)})",
+                )
+            )
+            continue
+        row_id, _, plan, _, _, _, _, committed, actual, outcome = cells
+        if not SPEND_ROW_ID_RE.fullmatch(row_id):
+            issues.append(
+                Issue("ERROR", path, f"line {line_number}: invalid spend ledger row ID {row_id!r}")
+            )
+        elif row_id in seen_ids:
+            issues.append(
+                Issue("ERROR", path, f"line {line_number}: duplicate spend ledger row ID {row_id}")
+            )
+        seen_ids.add(row_id)
+        if plan != SPEND_NO_PLAN and plan not in known_plans:
+            issues.append(Issue("ERROR", path, f"line {line_number}: unknown spend plan {plan!r}"))
+        if outcome.endswith(SPEND_PROVISIONAL_SUFFIX):
+            base = outcome.removesuffix(SPEND_PROVISIONAL_SUFFIX)
+            outcome_known = base in SPEND_TERMINAL_OUTCOMES
+        else:
+            outcome_known = outcome in SPEND_OPEN_OUTCOMES or outcome in SPEND_TERMINAL_OUTCOMES
+        if not outcome_known:
+            issues.append(
+                Issue("ERROR", path, f"line {line_number}: invalid spend outcome {outcome!r}")
+            )
+        for label, amount in (("Committed USD", committed), ("Actual USD", actual)):
+            if amount != SPEND_NO_PLAN and not SPEND_AMOUNT_RE.fullmatch(amount):
+                issues.append(
+                    Issue(
+                        "ERROR",
+                        path,
+                        f"line {line_number}: invalid {label} amount {amount!r}",
+                    )
+                )
+
+
+def validate_spend(root: Path, issues: list[Issue]) -> None:
+    spend_dir = root / SPEND_DIR
+    if not spend_dir.is_dir():
+        return
+    known_plans = {path.stem for path in plan_paths(root)}
+
+    authority_path = spend_dir / SPEND_AUTHORITY_FILE
+    if not authority_path.is_file():
+        issues.append(Issue("ERROR", authority_path, f"missing {SPEND_AUTHORITY_FILE}"))
+    else:
+        text = read_text(authority_path, issues)
+        if text is not None:
+            try:
+                authority = json.loads(text)
+            except json.JSONDecodeError as error:
+                issues.append(Issue("ERROR", authority_path, f"invalid JSON: {error.msg}"))
+            else:
+                validate_spend_authority(authority_path, authority, known_plans, issues)
+
+    ledger_path = spend_dir / SPEND_LEDGER_FILE
+    if not ledger_path.is_file():
+        issues.append(Issue("ERROR", ledger_path, f"missing {SPEND_LEDGER_FILE}"))
+        return
+    text = read_text(ledger_path, issues)
+    if text is not None:
+        validate_spend_ledger(ledger_path, text.splitlines(), known_plans, issues)
+
+
+def validate_money_in_records(root: Path, issues: list[Issue]) -> None:
+    for path in experiment_record_paths(root):
+        text = read_text(path, issues)
+        if text is None:
+            continue
+        for line_number, line in enumerate(text.splitlines(), start=1):
+            without_math = MATH_SPAN_RE.sub(" ", line)
+            match = MONEY_RE.search(without_math)
+            if match:
+                issues.append(
+                    Issue(
+                        "ERROR",
+                        path,
+                        f"line {line_number}: currency amount {match.group(0)!r} in a record; "
+                        "records carry units and job ids, money lives in plans/spend/",
+                    )
+                )
+
+
+def validate_review_register(path: Path, body: str, issues: list[Issue]) -> None:
+    lines = body.splitlines()
+    header_index = table_header(lines, REVIEW_REGISTER_COLUMNS)
+    if header_index is None:
+        issues.append(
+            Issue(
+                "ERROR",
+                path,
+                f"review register table must use columns: {' | '.join(REVIEW_REGISTER_COLUMNS)}",
+            )
+        )
+        return
+    seen: set[str] = set()
+    relation_index = REVIEW_REGISTER_COLUMNS.index("Relation")
+    for line_number, line in enumerate(lines[header_index + 2 :], start=header_index + 3):
+        if not line.lstrip().startswith("|"):
+            break
+        cells = table_cells(line)
+        row_id = cells[0]
+        if REVIEW_SUMMARY_ROW_RE.fullmatch(row_id):
+            continue
+        if not REVIEW_REGISTER_ID_RE.fullmatch(row_id):
+            issues.append(
+                Issue("ERROR", path, f"line {line_number}: invalid review register ID {row_id!r}")
+            )
+            continue
+        if row_id in seen:
+            issues.append(
+                Issue("ERROR", path, f"line {line_number}: duplicate review register ID {row_id}")
+            )
+        seen.add(row_id)
+        if len(cells) != len(REVIEW_REGISTER_COLUMNS):
+            issues.append(
+                Issue(
+                    "ERROR",
+                    path,
+                    f"line {line_number}: review register row has {len(cells)} cells "
+                    f"(expected {len(REVIEW_REGISTER_COLUMNS)})",
+                )
+            )
+            continue
+        if cells[relation_index] not in REVIEW_RELATIONS:
+            issues.append(
+                Issue("ERROR", path, f"line {line_number}: invalid relation {cells[relation_index]!r}")
+            )
+
+
+def validate_review_ledger(root: Path, issues: list[Issue]) -> None:
+    path = root / REVIEW_LEDGER_FILE
+    if not path.is_file():
+        return
+    text = read_text(path, issues)
+    if text is None:
+        return
+
+    register_body = section_body(text, REVIEW_REGISTER_HEADING)
+    if register_body is None:
+        issues.append(Issue("ERROR", path, f"missing ## {REVIEW_REGISTER_HEADING} section"))
+    else:
+        validate_review_register(path, register_body, issues)
+
+    findings_body = section_body(text, REVIEW_FINDINGS_HEADING)
+    if findings_body is None:
+        return
+    first_row = next((line for line in findings_body.splitlines() if line.lstrip().startswith("|")), None)
+    if first_row is not None and table_cells(first_row) != REVIEW_FINDING_COLUMNS:
+        issues.append(
+            Issue(
+                "ERROR",
+                path,
+                f"open findings table must use columns: {' | '.join(REVIEW_FINDING_COLUMNS)}",
+            )
+        )
+
+
 def validate_ledger(root: Path, issues: list[Issue]) -> None:
     ledger_root = root / "jobs" / "processed"
     if not ledger_root.exists():
@@ -799,6 +1070,9 @@ def validate(candidate: Path) -> tuple[Path, list[Issue]]:
         validate_findings(root, issues)
     validate_claims(root, issues)
     validate_plans(root, issues)
+    validate_spend(root, issues)
+    validate_money_in_records(root, issues)
+    validate_review_ledger(root, issues)
     validate_ledger(root, issues)
     return root, issues
 
@@ -881,6 +1155,7 @@ Example.
         (root / "experiments" / "README.md").write_text(
             "# Experiments\n\n- [[EXP-001-example]]\n", encoding="utf-8"
         )
+        clean_experiment = experiment.read_text(encoding="utf-8")
         _, valid_issues = validate(root)
         if any(issue.level == "ERROR" for issue in valid_issues):
             for issue in valid_issues:
@@ -902,6 +1177,65 @@ Example.
         _, estimand_issues = validate(root)
         if not any("no **Registration**" in issue.message for issue in estimand_issues):
             print("ERROR: self-test did not detect an unregistered estimand")
+            return 1
+        experiment.write_text(clean_experiment, encoding="utf-8")
+
+        spend_dir = root / "plans" / "spend"
+        spend_dir.mkdir(parents=True)
+        authority_path = spend_dir / "AUTHORITY.json"
+        empty_authority = json.dumps({"schema": SPEND_AUTHORITY_SCHEMA, "plans": {}})
+        authority_path.write_text(empty_authority, encoding="utf-8")
+        ledger_header = "| " + " | ".join(SPEND_LEDGER_COLUMNS) + " |\n"
+        ledger_separator = "|" + "---|" * len(SPEND_LEDGER_COLUMNS) + "\n"
+        good_row = (
+            "| S001 | 2026-09-10 | - | - | pilot-r1 | demo:JOB-1 | pilot | 3.00 | 2.00 | complete |\n"
+        )
+        ledger_path = spend_dir / "LEDGER.md"
+        ledger_path.write_text(ledger_header + ledger_separator + good_row, encoding="utf-8")
+        _, spend_issues = validate(root)
+        if any(issue.level == "ERROR" for issue in spend_issues):
+            for issue in spend_issues:
+                print(issue.render(root))
+            return 1
+
+        short_row = "| S001 | 2026-09-10 | - | - | pilot-r1 | demo:JOB-1 | pilot | 3.00 | 2.00 |\n"
+        ledger_path.write_text(ledger_header + ledger_separator + short_row, encoding="utf-8")
+        _, row_issues = validate(root)
+        if not any("spend ledger row has 9 cells" in issue.message for issue in row_issues):
+            print("ERROR: self-test did not detect a short spend ledger row")
+            return 1
+        ledger_path.write_text(ledger_header + ledger_separator + good_row, encoding="utf-8")
+        authority_path.write_text(
+            json.dumps(
+                {
+                    "schema": SPEND_AUTHORITY_SCHEMA,
+                    "plans": {
+                        "2026-01-01-missing-plan": {
+                            "shared_ceiling_usd": 5.0,
+                            "authorized_by": "A. Researcher",
+                            "recorded_utc": "2026-09-09T00:00:00+00:00",
+                        }
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        _, authority_issues = validate(root)
+        if not any("names no plan" in issue.message for issue in authority_issues):
+            print("ERROR: self-test did not detect an authority entry naming no plan")
+            return 1
+        authority_path.write_text(empty_authority, encoding="utf-8")
+
+        experiment.write_text(
+            clean_experiment.replace(
+                "## Results\n\nExample.\n",
+                "## Results\n\nExample. The attempt finished (exit 0, 3m42s, $0.03).\n",
+            ),
+            encoding="utf-8",
+        )
+        _, money_issues = validate(root)
+        if not any("money lives in plans/spend/" in issue.message for issue in money_issues):
+            print("ERROR: self-test did not detect currency in a record")
             return 1
     print("validate-notebook self-test passed")
     return 0

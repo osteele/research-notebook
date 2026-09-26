@@ -23,7 +23,8 @@ Read the matching reference before acting:
 | Analyze results or state a conclusion | [Research methodology](references/research-methodology.md) |
 | Write a cross-experiment synthesis | [Findings](references/findings.md) |
 | Create, resume, or close a plan | [Plans](references/plans.md) |
-| Compare research costs, estimate a budget, or reconcile spending | [Plan budget and accounting](references/plans.md#budget-and-accounting), [Experiment cost and resources](references/experiments.md#cost-and-resources), and [Usage and billing sources](references/job-runners.md#usage-and-billing-sources) |
+| Estimate resources, record spend authority, or reconcile spending | [Spend and units](references/spend.md), [Plan resources and spend](references/plans.md#resources-and-spend), [Experiment resources](references/experiments.md#resources), and [Usage and billing sources](references/job-runners.md#usage-and-billing-sources) |
+| Log an independent review, or consult gates before submitting | [Review ledger and gates](references/review-ledger.md) |
 | Preview or execute a plan; walk through or replay existing results | [Plan execution and read-only review](references/plan-execution.md) |
 | Curate claims or publication readiness | [Publication](references/publication.md) |
 | Adapt a compute backend | [Runner adapters](references/runner-adapters.md) and, when needed, [Processed-job ledger](references/processed-job-ledger.md) |

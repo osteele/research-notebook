@@ -157,6 +157,24 @@ class NotebookFixture:
         )
         return path
 
+    def add_spend_dir(self) -> pathlib.Path:
+        spend = self.root / "plans" / "spend"
+        spend.mkdir(parents=True)
+        return spend
+
+    def write_spend_authority(self, plans: dict) -> None:
+        (self.root / "plans" / "spend" / "AUTHORITY.json").write_text(
+            json.dumps({"schema": validator.SPEND_AUTHORITY_SCHEMA, "plans": plans}),
+            encoding="utf-8",
+        )
+
+    def write_spend_ledger(self, *rows: str) -> None:
+        header = "| " + " | ".join(validator.SPEND_LEDGER_COLUMNS) + " |\n"
+        separator = "|" + "---|" * len(validator.SPEND_LEDGER_COLUMNS) + "\n"
+        (self.root / "plans" / "spend" / "LEDGER.md").write_text(
+            header + separator + "".join(rows), encoding="utf-8"
+        )
+
 
 class NotebookValidationTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -663,6 +681,202 @@ class NotebookValidationTests(unittest.TestCase):
         self.assertEqual(first, second)
         self.assertIn("## Active", first)
         self.assertIn("[Synthetic control campaign]", first)
+
+    def test_spend_ledger_is_not_reported_as_a_plan(self) -> None:
+        plans = self.root / "plans"
+        (plans / "spend").mkdir(parents=True)
+        (plans / "2026-08-11-synthetic-control.md").write_text(PLAN, encoding="utf-8")
+        self.fixture.write_spend_authority(
+            {
+                "2026-08-11-synthetic-control": {
+                    "shared_ceiling_usd": 21.0,
+                    "authorized_by": "A. Researcher",
+                    "recorded_utc": "2026-09-09T00:00:00+00:00",
+                }
+            }
+        )
+        self.fixture.write_spend_ledger(
+            "| S001 | 2026-09-10 | 2026-08-11-synthetic-control | EXP-001 | pilot-r1"
+            " | demo:JOB-1 | pilot | 3.00 | 2.00 | complete |\n"
+        )
+        self.assertEqual(self.messages(), [])
+
+    def test_spend_authority_entry_for_status_subdirectory_plan_is_clean(self) -> None:
+        plans = self.root / "plans" / "completed"
+        plans.mkdir(parents=True)
+        terminal = PLAN.replace("status: active", "status: completed").replace(
+            "next_action: Run Phase 1", "next_action: none"
+        )
+        terminal += (
+            "\n## Completion report\n\nThe control passed.\n\n## Evidence\n\n- [[EXP-001]]\n"
+        )
+        (plans / "2026-08-11-synthetic-control.md").write_text(terminal, encoding="utf-8")
+        self.fixture.add_spend_dir()
+        self.fixture.write_spend_authority(
+            {
+                "2026-08-11-synthetic-control": {
+                    "shared_ceiling_usd": 8.0,
+                    "authorized_by": "A. Researcher",
+                    "recorded_utc": "2026-09-09T00:00:00+00:00",
+                }
+            }
+        )
+        self.fixture.write_spend_ledger(
+            "| S001 | 2026-09-10 | 2026-08-11-synthetic-control | EXP-001 | pilot-r1"
+            " | demo:JOB-1 | pilot | 3.00 | 2.00 | complete |\n"
+        )
+        self.assertEqual(self.messages(), [])
+
+    def test_spend_authority_entry_must_name_a_plan(self) -> None:
+        self.fixture.add_spend_dir()
+        self.fixture.write_spend_authority(
+            {
+                "2026-01-01-vanished-plan": {
+                    "shared_ceiling_usd": 5.0,
+                    "authorized_by": "A. Researcher",
+                    "recorded_utc": "2026-09-09T00:00:00+00:00",
+                }
+            }
+        )
+        self.fixture.write_spend_ledger(
+            "| S001 | 2026-09-10 | - | - | pilot-r1 | demo:JOB-1 | pilot | 3.00 | 2.00 | complete |\n"
+        )
+        self.assertIn(
+            "plans entry '2026-01-01-vanished-plan' names no plan", self.messages()
+        )
+
+    def test_spend_ceiling_must_be_positive(self) -> None:
+        plans = self.root / "plans"
+        plans.mkdir()
+        (plans / "2026-08-11-synthetic-control.md").write_text(PLAN, encoding="utf-8")
+        self.fixture.add_spend_dir()
+        self.fixture.write_spend_ledger(
+            "| S001 | 2026-09-10 | - | - | pilot-r1 | demo:JOB-1 | pilot | 3.00 | 2.00 | complete |\n"
+        )
+        for ceiling in (0, -5.0):
+            with self.subTest(ceiling=ceiling):
+                self.fixture.write_spend_authority(
+                    {
+                        "2026-08-11-synthetic-control": {
+                            "shared_ceiling_usd": ceiling,
+                            "authorized_by": "A. Researcher",
+                            "recorded_utc": "2026-09-09T00:00:00+00:00",
+                        }
+                    }
+                )
+                self.assertIn(
+                    "plans entry '2026-08-11-synthetic-control' shared_ceiling_usd"
+                    " must be a positive number",
+                    self.messages(),
+                )
+
+    def test_spend_ledger_row_contract(self) -> None:
+        self.fixture.add_spend_dir()
+        self.fixture.write_spend_authority({})
+        good_row = (
+            "| S001 | 2026-09-10 | - | - | pilot-r1 | demo:JOB-1 | pilot | 3.00 | 2.00"
+            " | complete/provisional |\n"
+        )
+        self.fixture.write_spend_ledger(good_row)
+        self.assertEqual(self.messages(), [])
+
+        self.fixture.write_spend_ledger(
+            "| S001 | 2026-09-10 | - | - | pilot-r1 | demo:JOB-1 | pilot | 3.00 | 2.00 |\n"
+        )
+        self.assertIn(
+            "line 3: spend ledger row has 9 cells (expected 10)", self.messages()
+        )
+
+        self.fixture.write_spend_ledger(
+            "| S001 | 2026-09-10 | - | - | pilot-r1 | demo:JOB-1 | pilot | 3.00 | 2.00 | paused |\n"
+        )
+        self.assertIn("line 3: invalid spend outcome 'paused'", self.messages())
+
+        self.fixture.write_spend_ledger(
+            "| S001 | 2026-09-10 | 2026-08-11-missing-plan | - | pilot-r1 | demo:JOB-1 | pilot | 3.00 | 2.00 | complete |\n"
+        )
+        self.assertIn(
+            "line 3: unknown spend plan '2026-08-11-missing-plan'", self.messages()
+        )
+
+    def test_money_in_record_is_an_error(self) -> None:
+        path = self.fixture.add_experiment()
+        for snippet in (
+            "done (exit 0, 3m42s, $0.03)",
+            "at most $20",
+            "`run_ceiling_usd`",
+            "in USD",
+        ):
+            with self.subTest(snippet=snippet):
+                path.write_text(
+                    COMPLETED_EXPERIMENT.replace(
+                        "The metric increased.",
+                        f"The metric increased, {snippet}.",
+                    ),
+                    encoding="utf-8",
+                )
+                messages = self.messages()
+                self.assertTrue(
+                    any("money lives in plans/spend/" in message for message in messages),
+                    messages,
+                )
+
+    def test_math_spans_and_units_in_records_are_clean(self) -> None:
+        path = self.fixture.add_experiment()
+        for snippet in (
+            "$10^{-4}$",
+            "$x_1$ and $y$",
+            "$1 - 0.9^{12} \\approx 0.718$",
+            "1,620 forward passes, 0.26 GPU-hours",
+        ):
+            with self.subTest(snippet=snippet):
+                path.write_text(
+                    COMPLETED_EXPERIMENT.replace(
+                        "The metric increased.",
+                        f"The metric changed by {snippet}.",
+                    ),
+                    encoding="utf-8",
+                )
+                self.assertEqual(self.messages(), [])
+
+    def test_review_ledger_register_header_must_match_schema(self) -> None:
+        (self.root / "REVIEW-LEDGER.md").write_text(
+            "# Review ledger\n\n"
+            "## Review register\n\n"
+            "| ID | Date | Kind | Target | Reviewer | Findings |\n"
+            "|---|---|---|---|---|---|\n"
+            "| R001 | 2026-09-10 | review-script | scripts/exp.py @ 3f1c9a2e"
+            " | fresh session | none |\n",
+            encoding="utf-8",
+        )
+        self.assertIn(
+            "review register table must use columns: ID | Date | Kind | Target"
+            " | Reviewer | Relation | Findings",
+            self.messages(),
+        )
+
+    def test_well_formed_review_ledger_is_valid(self) -> None:
+        (self.root / "REVIEW-LEDGER.md").write_text(
+            "# Review ledger\n\n"
+            "## Review register\n\n"
+            "| ID | Date | Kind | Target | Reviewer | Relation | Findings |\n"
+            "| --- | --- | --- | --- | --- | --- | --- |\n"
+            "| R001 | 2026-09-10 | review-script"
+            " | scripts/exp_002_comparison.py @ 3f1c9a2e | fresh session"
+            " | same model, no shared context | F001, F002 |\n"
+            "| R002 | 2026-09-11 | review-design | EXP-002 design | second provider"
+            " | different model | none |\n"
+            "| R040–R061 | 2026-09-20 | review-script | 22 script revisions"
+            " | fresh sessions | various | 2 findings |\n"
+            "\n"
+            "## Open findings\n\n"
+            "| ID | Fault | Caught by | Severity | Status |\n"
+            "| --- | --- | --- | --- | --- |\n"
+            "| F002 | Summary averages over all cells, including the excluded pilot cell"
+            " | R001 | silent | repair landed; awaiting review |\n",
+            encoding="utf-8",
+        )
+        self.assertEqual(self.messages(), [])
 
 
 if __name__ == "__main__":

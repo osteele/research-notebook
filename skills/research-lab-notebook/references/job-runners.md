@@ -52,11 +52,12 @@ For each source, record:
 - reporting lag, retention, attribution gaps, and known exclusions such as
   setup, idle capacity, storage, transfers, credits, or taxes.
 
-Record source identity and retrieval time with each observation in the
-experiment's [Cost and resources](experiments.md#cost-and-resources). Preserve
-the source period or as-of time too; retrieving a stale report now does not
-make its figures current. A job system may expose resource usage but no price.
-In that case, a dated rate can support a labeled estimate, while final monetary
+Record usage observations, with source identity and retrieval time, in the
+experiment's [Resources](experiments.md#resources), and money in the plan's
+spend ledger ([Spend and units](spend.md#ledgermd)). Preserve the source period
+or as-of time too; retrieving a stale report now does not make its figures
+current. A job system may expose resource usage but no price. In that case, a
+dated rate can support a ledger row marked `/provisional`, while final monetary
 cost remains unavailable. A local run can have resource usage and no incremental
 cash charge; state the accounting scope instead of treating all resources as free.
 
@@ -91,11 +92,11 @@ namespaced. Otherwise use the [processed-job ledger](processed-job-ledger.md).
 
 Write the processed mark last. Store a pointer to the experiment or finding and
 the notebook revision when the backend allows metadata.
-Capture available cost evidence and explicit billing gaps before that durable
-update. Processed state means scientific evidence processing is complete; it
-does not certify financial settlement. A later bill corrects or supersedes the
-estimate in the experiment record, preserving history without duplicating spend
-or creating a second processing entry.
+Capture available usage evidence in the record, and money in the spend ledger,
+before that durable update. Processed state means scientific evidence processing
+is complete; it does not certify financial settlement. A later bill is a
+`correction` row in the ledger carrying the difference, without duplicating
+spend or creating a second processing entry.
 
 ## Failure behavior
 

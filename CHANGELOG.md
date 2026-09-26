@@ -4,13 +4,20 @@
 
 ### Changed
 
-- Optional plan `Budget and accounting` and experiment `Cost and resources`
-  conventions cover cost-aware design choices, estimates, approved limits,
-  attempt-level provenance, nonoverlapping forecasts, and billing reconciliation.
-  Runner and processing guidance preserve billing gaps and distinguish scientific
-  completion from financial settlement. See the
+- Notebook schema 7. Money has one home, `plans/spend/`: `AUTHORITY.json`
+  (schema `plan-spend-authority/v1`) holds each plan's approved ceiling,
+  allocations, and dated history, keyed by plan filename stem, and `LEDGER.md`
+  holds money per authorized attempt. Experiment records and plans state
+  resources in engineering units and carry no currency amounts. Scripts receive
+  runtime caps in seconds or calls. The validator reports a currency amount in
+  an experiment record, an authority entry that names no plan, and a malformed
+  ledger row, and no longer reads `plans/spend/` as plans. See
+  [Spend and units](skills/research-lab-notebook/references/spend.md) and the
   [cost guide](https://research-notebook.osteele.com/guide/costs/).
-  Notebook schema remains 6; these prose conventions add no runtime enforcement.
+- An optional `REVIEW-LEDGER.md` records independent reviews, open findings,
+  and gates. The validator checks its register and findings table shapes when
+  the file exists. See
+  [Review ledger and gates](skills/research-lab-notebook/references/review-ledger.md).
 - The project is published as Research Notebook System at
   `osteele/research-notebook`. Install commands use the new repository name;
   the two skill names are unchanged.

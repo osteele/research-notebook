@@ -146,14 +146,16 @@ Why the plan ended and which terminal condition applied.
 Links to the experiments, findings, claims, and revisions that support closure.
 ```
 
-## Budget and accounting
+## Resources and spend
 
-Use an optional `## Budget and accounting` section to keep the plan's estimates,
-approved limits, and dated decisions together. Prose, bullets, or a small table
-can carry it. This is a human-readable recording pattern, not new frontmatter,
-a required heading, a separate accounting ledger, or a validator-enforced
-budget. See the [cost guide](https://research-notebook.osteele.com/guide/costs/)
-for a worked campaign.
+A plan states its resource estimate in units and names its packages and their
+experiments. It carries no money: no ceiling, allocation, rate, or spend figure.
+Spend authority, including the plan's ceiling, any package allocations, and
+their dated history, is recorded in `plans/spend/AUTHORITY.json` under the
+plan's filename stem, and money per attempt in `plans/spend/LEDGER.md`. See
+[Spend and units](spend.md) for the formats and the
+[cost guide](https://research-notebook.osteele.com/guide/costs/) for a worked
+campaign.
 
 Choose the cheapest instrument sufficient for the scientific decision. Compare
 analysis of existing data, an instrument check, a bounded pilot, a full
@@ -163,70 +165,43 @@ uncertainty, and independent confirmation. A pilot that checks the instrument
 does not become evidence for a claim beyond its design.
 
 Build the estimate from setup and data preparation, attempt counts, resource
-quantities, rates, and conditional branches. Include likely operational
-exposure such as failed attempts, retries, provisioning, idle time, storage,
-and transfer when they are in scope. Separate:
+quantities, and conditional branches. Include likely operational exposure such
+as failed attempts, retries, provisioning, idle time, storage, and transfer when
+they are in scope. Keep separate:
 
 - compute quantity, with units such as GPU-hours and the device count;
-- money, with currency, rate source and date, billing unit, and billing scope;
+- calls and tokens for provider APIs;
 - elapsed time, including queueing and parallelism assumptions; and
 - human effort, including setup, review, and result processing.
 
-State costs outside the estimate's scope. Local or prepaid compute can consume
-resources even when incremental cash expense is zero. Explain uncertainty with
-ranges, bounded scenarios, or unknowns; use outcome probabilities only when
-there is evidence for them. Conditional scientific branches need explicit
-costs and entry conditions, not invented expected-value probabilities.
+Explain uncertainty with ranges, bounded scenarios, or unknowns; use outcome
+probabilities only when there is evidence for them. Conditional scientific
+branches need explicit resource estimates and entry conditions, not invented
+expected-value probabilities. A projection across providers or devices keeps
+the configuration each option needs and leaves the rate to the spend files.
 
-Record the baseline estimate, approved ceiling and scope, monetary contingency,
-retry policy, and dated approval with its author. Identify which branches are
-authorized and where another decision is required. Contingency is capacity
-within the approved ceiling; it is not spent cost and is not automatically
-added again to the forecast. Keep it distinct from the statistical
+Record the dated baseline estimate, the retry policy, and which branches are
+authorized. Contingency is capacity inside the approved ceiling, recorded as an
+allocation in the authority file; it is not spent and is not added again to the
+forecast. Keep it distinct from the statistical
 [confirmation reserve](#confirmation-reserve): holding back evidence protects
-inference, whereas holding back money covers financial uncertainty. Budget
-room cannot replace either scientific or human-review gates.
+inference, whereas holding back money covers financial uncertainty. Budget room
+cannot replace either scientific or human-review gates, and a larger ceiling
+does not authorize a different study.
 
-Experiments own [per-attempt cost evidence](experiments.md#cost-and-resources).
-The plan links those records and carries a dated rollup, with its as-of time,
-scope, units, and unresolved gaps. Use three nonoverlapping quantities for the
-same scope and as-of time:
+Before admitting work, check headroom as [Spend and units](spend.md#deriving-the-account)
+derives it, using a conservative bound for concurrent attempts and permitted
+retries. Coordinate reservations so separate agents cannot each spend the same
+headroom. A documented runner limit is a safeguard only if the runner actually
+enforces it. If credible exposure exceeds the approved ceiling, or a material
+unknown prevents bounding it, stop for a decision on scope, resources, or
+budget. See [execution preflight](plan-execution.md#execute-the-authorized-scope).
 
-| Quantity | Meaning |
-|---|---|
-| A: incurred to date | Usage or charges already incurred, including failed and running attempts. Label provider-reported versus usage-estimated amounts, and billed versus provisional amounts. |
-| C: committed remainder | Additional forecast for running or submitted work only, excluding every portion already in A. |
-| U: uncommitted forecast | Planned work not yet submitted. Approval alone is not an execution commitment. |
-
-Forecast = A + C + U. Moving a planned attempt into the queue moves its forecast
-from U to C; consumption moves the incurred portion into A. Do not add a
-running job's full forecast to its incurred cost. Calculate separately for
-each unit and currency; do not add GPU-hours to dollars. Currency conversions
-need a dated exchange-rate basis and must preserve the original amounts.
-
-Headroom after commitments = approved limit - A - C. It still has to cover U.
-The margin against the full forecast is approved limit - (A + C + U).
-Neither headroom nor an underspend grants approval for more work. Identify
-unallocated shared charges and missing billing evidence alongside the rollup;
-unknown is not zero, and an incomplete subtotal is not a settled total.
-
-Before admitting work, use a conservative bound for concurrent attempts and
-permitted retries, not just the nominal single-job price. Coordinate
-reservations against the same approval so separate agents cannot each spend
-the same headroom. A documented runner limit is a safeguard only if the runner
-actually enforces it. If credible exposure exceeds the approved ceiling, or a
-material unknown prevents bounding it, stop for a decision on scope, resources,
-or budget. Record any approved change with its date; keep the original baseline.
-See [execution preflight](plan-execution.md#execute-the-authorized-scope).
-
-At closure, compare incurred costs with the baseline at matching scope, explain
-variance, and link final or pending billing evidence. Retain the forecast
-history and mark corrected estimates superseded rather than adding a bill as
-new spend for the same usage. Name remaining commitments, pending charges,
-unallocated costs, and the owner and next check for unresolved billing. A
-scientifically completed plan can have financial settlement pending; say both.
-Carry lessons about rates, idle time, and retries into successor estimates
-without automatically authorizing successor jobs.
+At closure, compare the resources used with the baseline estimate in units and
+explain the variance. The ledger holds the money; name any pending charges and
+the owner of their follow-up. A scientifically completed plan can have
+financial settlement pending; say both. Carry lessons about rates, idle time,
+and retries into successor estimates without authorizing successor jobs.
 
 ## Confirmation reserve
 
@@ -267,7 +242,7 @@ states:
 - limitations and instrument caveats worth a future reader's attention;
 - follow-ups left on the table, naming the successor plan when one exists;
 - job and artifact status at closure;
-- a link to the budget's actual-versus-baseline reconciliation, when costs are
+- a link to the resource reconciliation against the baseline, when resources are
   tracked, including any pending settlement and its follow-up owner.
 
 Canonical numbers and interpretation still live in `experiments/` and

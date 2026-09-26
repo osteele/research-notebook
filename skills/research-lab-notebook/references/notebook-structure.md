@@ -19,12 +19,14 @@ project/
       README.md
       2026-08-10-cross-experiment-result.md
     plans/                  # optional multi-step research plans
+      spend/                # optional: AUTHORITY.json and LEDGER.md, the only home for money
     reports/                # optional living syntheses
     papers/                 # optional canonical Typst manuscripts and shared bibliography
     references/             # optional cited-paper cache and tracked source notes
     kb/                     # optional stable reference material
     causal-models/          # optional working mechanism hypotheses
     CLAIMS.md               # core claim ledger; initially empty
+    REVIEW-LEDGER.md        # optional review register, findings, and gates
     PUBLICATION.md          # optional paper readiness and venues
   scripts/                  # executable research code
   data/                     # raw or structured results
@@ -38,6 +40,10 @@ reproduce the run.
 
 - Add `plans/` for a bounded objective with several experiments or phases.
 - Add `RUNNER.md` when the project submits or processes jobs through a runner.
+- Add `plans/spend/` when work spends money under an approved ceiling. It holds
+  every currency amount in the notebook; see [Spend and units](spend.md).
+- Add `REVIEW-LEDGER.md` when the project logs independent reviews; see
+  [Review ledger and gates](review-ledger.md).
 - Add `reports/` for a living analysis that does not fit one experiment or one
   immutable finding.
 - Add `papers/` for notebook-resident, content-canonical manuscripts authored

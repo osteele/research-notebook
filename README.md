@@ -215,7 +215,7 @@ and history across providers and sessions. Native planning modes remain useful
 for creating or executing a notebook plan. See the [plan
 specification](skills/research-lab-notebook/references/plans.md).
 
-### Cost-aware planning and accounting
+### Units and spend authority
 
 Choose the cheapest instrument sufficient for the decision: existing-data
 analysis, checks, a pilot, full measurement, or independent confirmation.
@@ -223,20 +223,28 @@ Preserve controls and valid uncertainty. The
 [cost guide](https://research-notebook.osteele.com/guide/costs/) follows one
 fictional campaign from estimate through final billing.
 
-Use optional human-readable
-[Budget and accounting](skills/research-lab-notebook/references/plans.md#budget-and-accounting)
-notes in the plan for estimates, approved limits, and linked as-of rollups.
-Keep per-attempt sources and corrections in the experiment's
-[Cost and resources](skills/research-lab-notebook/references/experiments.md#cost-and-resources).
-Forecasts separate incurred cost, the additional remainder of submitted work,
-and planned work not yet committed. Unknown charges remain visible; later
-bills replace estimates for the same usage rather than adding duplicate spend.
+Experiment records and plans state resources in engineering units: GPU-hours
+and device class, forward passes, calls and tokens, elapsed time, and the
+Backend and Job ID of each attempt. Money has one home, `plans/spend/`.
+`AUTHORITY.json` records each plan's approved ceiling, allocations, and their
+history, keyed by plan filename stem so status moves cannot orphan it.
+`LEDGER.md` records money per attempt, from which incurred, committed, and
+remaining headroom are derived. Scripts receive their runtime caps in seconds
+or calls and hold no currency. See
+[Spend and units](skills/research-lab-notebook/references/spend.md).
 
-Money, compute quantity, elapsed time, and human effort stay separate. Budget
-headroom grants no new scope or spending permission. Scientific processing can
-finish with billing pending when the available evidence and follow-up owner
-are recorded. These conventions add no accounting ledger, required schema
-fields, validator checks, or runtime budget enforcement.
+Budget headroom grants no new scope or spending permission. Unknown charges
+remain visible, and a later bill is a ledger correction carrying the difference
+rather than new spend. Scientific processing can finish with billing pending
+when the available evidence and follow-up owner are recorded.
+
+### Independent review and gates
+
+An optional `REVIEW-LEDGER.md` logs each requested review of a plan, design,
+script, or result, including reviews that find nothing, with the reviewer's
+relation to the author. Faults become gates: questions, each founded on a run
+that failed that way, that are consulted before the next costly submission.
+See [Review ledger and gates](skills/research-lab-notebook/references/review-ledger.md).
 
 ### Choose execution or read-only review
 
