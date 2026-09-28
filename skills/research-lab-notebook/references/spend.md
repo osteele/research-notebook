@@ -50,10 +50,38 @@ rate. "Two 8-GPU nodes for 3 hours" stays true when the price changes;
 "about $400" does not. The configuration usually carries the scientific
 argument, since it records what scale of hardware the arm requires.
 
-When the measured quantity is itself a price, as in a study of cost-effectiveness
-or a model whose output is a cost, the record reports the units that determine
-the price (calls, tokens, device-hours, extrapolated volume) and names the job
-ids whose charges the ledger holds.
+## Prices as data
+
+The rule governs spend on the research itself. A price can also be the object
+of study, or an input to the model under study. Those dollars would mean the
+same thing if someone else had paid for the compute, and they are scientific
+quantities. A record keeps them inside a marked region:
+
+```markdown
+<!-- usd: measured — simulator objective: total cost per job -->
+| Policy | Cost per job (USD) |
+|---|---|
+| greedy | $1.20 |
+<!-- /usd -->
+```
+
+- `measured` is reserved for dollars a simulator or model outputs as its
+  objective. They are experimental measurements.
+- `parameter` is for external market inputs: spot prices, total-cost-of-ownership
+  rates, market-derived cost-efficiency figures. The reason names the source or
+  the model the parameter feeds.
+- The marker wraps lines, not files. One record often holds both a simulator
+  table and a line about what the rental cost, and a file-level exemption would
+  license the second under cover of the first. Nothing is inferred from
+  position: scientific dollars appear in prose as well as tables.
+- The validator skips lines inside a marker, reports a marker that is unclosed,
+  nested, stray, unlabeled, or missing its reason, and adds a NOTE giving each
+  record's marked line count, so growth in exemptions stays visible.
+
+The marker is for figures that remain once spend is out of the record, never for
+spend itself. A study of cost-effectiveness reports the units that determine the
+price (calls, tokens, device-hours, extrapolated volume) and marks the per-unit
+price as a `parameter`.
 
 ## The spend directory
 

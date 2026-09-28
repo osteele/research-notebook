@@ -31,7 +31,11 @@
   },
   "experiment_id": {
     "pattern": "^[A-Z][A-Z0-9]*-[A-Z0-9]+[a-z]?$",
-    "examples": ["EXP-001", "ACC-E1", "EXP-045b"]
+    "examples": [
+      "EXP-001",
+      "ACC-E1",
+      "EXP-045b"
+    ]
   },
   "experiment": {
     "annex_suffix": ".annex.md",
@@ -41,8 +45,21 @@
     "estimand": {
       "heading_pattern": "^#{2,4}\\s+E\\d+\\b",
       "registration_field": "Registration",
-      "registration_values": ["registered", "found", "gate"],
+      "registration_values": [
+        "registered",
+        "found",
+        "gate"
+      ],
       "claim_reference": "EXP-NNN:E#"
+    },
+    "usd_marker": {
+      "kinds": [
+        "measured",
+        "parameter"
+      ],
+      "open_pattern": "<!--\\s*usd:\\s*(?P<kind>[\\w-]*)\\s*(?:—|--?|:)?\\s*(?P<reason>.*?)\\s*-->",
+      "close_pattern": "<!--\\s*/usd\\s*-->",
+      "prefix_pattern": "<!--\\s*/?usd\\b"
     }
   },
   "finding_statuses": [
@@ -52,20 +69,62 @@
     "refuted"
   ],
   "claim": {
-    "columns": ["ID", "Role", "Claim", "Status", "Evidence", "Paper"],
-    "roles": ["major", "candidate major", "supporting"],
-    "statuses": ["supported", "provisional", "blocked", "refuted", "retired"],
-    "status_aliases": {"live": "supported", "withdrawn": "retired"},
+    "columns": [
+      "ID",
+      "Role",
+      "Claim",
+      "Status",
+      "Evidence",
+      "Paper"
+    ],
+    "roles": [
+      "major",
+      "candidate major",
+      "supporting"
+    ],
+    "statuses": [
+      "supported",
+      "provisional",
+      "blocked",
+      "refuted",
+      "retired"
+    ],
+    "status_aliases": {
+      "live": "supported",
+      "withdrawn": "retired"
+    },
     "evidence_requires_experiment": true,
     "paper_required": true,
     "promotion_requires_human_review": true,
     "estimand_reference_pattern": "\\b([A-Z][A-Z0-9]*-[A-Z0-9]+[a-z]?):(E\\d+)\\b"
   },
   "plan": {
-    "statuses": ["draft", "active", "blocked", "gated", "backlog", "superseded", "completed", "abandoned"],
-    "status_aliases": {"complete": "completed", "proposed": "draft"},
-    "terminal_statuses": ["superseded", "completed", "abandoned"],
-    "required_frontmatter": ["status", "summary", "next_action", "created", "updated"],
+    "statuses": [
+      "draft",
+      "active",
+      "blocked",
+      "gated",
+      "backlog",
+      "superseded",
+      "completed",
+      "abandoned"
+    ],
+    "status_aliases": {
+      "complete": "completed",
+      "proposed": "draft"
+    },
+    "terminal_statuses": [
+      "superseded",
+      "completed",
+      "abandoned"
+    ],
+    "required_frontmatter": [
+      "status",
+      "summary",
+      "next_action",
+      "created",
+      "updated"
+    ],
     "optional_frontmatter": [
       "owner",
       "reviewer",
@@ -77,13 +136,25 @@
       "abandoned_because"
     ],
     "required_frontmatter_by_status": {
-      "gated": ["gate"],
-      "superseded": ["superseded_by"],
-      "abandoned": ["abandoned_because"]
+      "gated": [
+        "gate"
+      ],
+      "superseded": [
+        "superseded_by"
+      ],
+      "abandoned": [
+        "abandoned_because"
+      ]
     },
     "one_of_frontmatter_by_status": {
-      "gated": ["revisit_when", "promote_when"],
-      "backlog": ["revisit_when", "promote_when"]
+      "gated": [
+        "revisit_when",
+        "promote_when"
+      ],
+      "backlog": [
+        "revisit_when",
+        "promote_when"
+      ]
     },
     "status_directories": {
       "draft": "draft",
@@ -103,9 +174,17 @@
       "Terminal conditions"
     ],
     "terminal_sections": {
-      "completed": ["Evidence"],
-      "superseded": ["Disposition", "Evidence"],
-      "abandoned": ["Disposition", "Evidence"]
+      "completed": [
+        "Evidence"
+      ],
+      "superseded": [
+        "Disposition",
+        "Evidence"
+      ],
+      "abandoned": [
+        "Disposition",
+        "Evidence"
+      ]
     },
     "completion_report": {
       "heading": "Completion report",
@@ -123,45 +202,126 @@
     },
     "confirmation_reserve": {
       "heading": "Confirmation reserve",
-      "required_markers": ["Held back", "Decision rule"]
+      "required_markers": [
+        "Held back",
+        "Decision rule"
+      ]
     },
     "retraction_notice_prefix": "**Retracted"
   },
   "human_review": {
     "checkpoints": [
-      {"id": "plan-before-execution", "label": "Plan approval", "when": "before plan execution"},
-      {"id": "experiment-design", "label": "Experiment design review", "when": "before preregistration"},
-      {"id": "preregistration", "label": "Preregistration review", "when": "before outcome inspection"},
-      {"id": "analysis-interpretation", "label": "Analysis and interpretation review", "when": "before synthesis"},
-      {"id": "plan-after-execution", "label": "Plan gate review", "when": "after each executed phase"},
-      {"id": "gated-follow-up", "label": "Follow-up approval", "when": "before a gated follow-up"},
-      {"id": "claim-promotion", "label": "Claim promotion review", "when": "before strengthening a claim"}
+      {
+        "id": "plan-before-execution",
+        "label": "Plan approval",
+        "when": "before plan execution"
+      },
+      {
+        "id": "experiment-design",
+        "label": "Experiment design review",
+        "when": "before preregistration"
+      },
+      {
+        "id": "preregistration",
+        "label": "Preregistration review",
+        "when": "before outcome inspection"
+      },
+      {
+        "id": "analysis-interpretation",
+        "label": "Analysis and interpretation review",
+        "when": "before synthesis"
+      },
+      {
+        "id": "plan-after-execution",
+        "label": "Plan gate review",
+        "when": "after each executed phase"
+      },
+      {
+        "id": "gated-follow-up",
+        "label": "Follow-up approval",
+        "when": "before a gated follow-up"
+      },
+      {
+        "id": "claim-promotion",
+        "label": "Claim promotion review",
+        "when": "before strengthening a claim"
+      }
     ]
   },
   "spend": {
     "directory": "plans/spend",
     "authority_file": "AUTHORITY.json",
     "authority_schema": "plan-spend-authority/v1",
-    "authority_required_fields": ["shared_ceiling_usd", "authorized_by", "recorded_utc"],
+    "authority_required_fields": [
+      "shared_ceiling_usd",
+      "authorized_by",
+      "recorded_utc"
+    ],
     "ledger_file": "LEDGER.md",
-    "ledger_columns": ["Row", "Date", "Plan", "Experiment", "Attempt", "Job", "Phase", "Committed USD", "Actual USD", "Outcome"],
-    "open_outcomes": ["authorized", "running"],
-    "terminal_outcomes": ["complete", "failed", "canceled", "operational-void", "correction"],
+    "ledger_columns": [
+      "Row",
+      "Date",
+      "Plan",
+      "Experiment",
+      "Attempt",
+      "Job",
+      "Phase",
+      "Committed USD",
+      "Actual USD",
+      "Outcome"
+    ],
+    "open_outcomes": [
+      "authorized",
+      "running"
+    ],
+    "terminal_outcomes": [
+      "complete",
+      "failed",
+      "canceled",
+      "operational-void",
+      "correction"
+    ],
     "provisional_suffix": "/provisional",
     "no_plan": "-"
   },
   "review_ledger": {
     "file": "REVIEW-LEDGER.md",
     "register_heading": "Review register",
-    "register_columns": ["ID", "Date", "Kind", "Target", "Reviewer", "Relation", "Findings"],
+    "register_columns": [
+      "ID",
+      "Date",
+      "Kind",
+      "Target",
+      "Reviewer",
+      "Relation",
+      "Findings"
+    ],
     "findings_heading": "Open findings",
-    "finding_columns": ["ID", "Fault", "Caught by", "Severity", "Status"],
-    "relations": ["self", "same model, no shared context", "different model", "human"],
-    "severities": ["silent", "loud"]
+    "finding_columns": [
+      "ID",
+      "Fault",
+      "Caught by",
+      "Severity",
+      "Status"
+    ],
+    "relations": [
+      "self",
+      "same model, no shared context",
+      "different model",
+      "human"
+    ],
+    "severities": [
+      "silent",
+      "loud"
+    ]
   },
   "ledger": {
     "schema_version": 1,
-    "terminal_statuses": ["succeeded", "failed", "canceled"],
+    "terminal_statuses": [
+      "succeeded",
+      "failed",
+      "canceled"
+    ],
     "required_fields": [
       "schema_version",
       "backend",

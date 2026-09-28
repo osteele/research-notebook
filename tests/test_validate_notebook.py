@@ -821,6 +821,45 @@ class NotebookValidationTests(unittest.TestCase):
                     messages,
                 )
 
+    def test_usd_markers_exempt_marked_lines_and_report_a_note(self) -> None:
+        path = self.fixture.add_experiment()
+        marked = (
+            "The metric increased.\n\n"
+            "<!-- usd: measured — simulator objective, total cost per job -->\n"
+            "| policy | $/job |\n|---|---|\n| greedy | $1.20 |\n"
+            "<!-- /usd -->\n\n"
+            "<!-- usd: parameter — spot price feeding the cost model, provider list 2026-09 -->\n"
+            "rate $2.21/hr\n"
+            "<!-- /usd -->\n"
+        )
+        path.write_text(COMPLETED_EXPERIMENT.replace("The metric increased.", marked), encoding="utf-8")
+        _, issues = validator.validate(self.root)
+        self.assertEqual([issue.level for issue in issues], ["NOTE"])
+        self.assertIn("lines inside usd markers (measured 3, parameter 1)", issues[0].message)
+        path.write_text(
+            COMPLETED_EXPERIMENT.replace("The metric increased.", marked + "\nThe rental cost $3.40.\n"),
+            encoding="utf-8",
+        )
+        self.assertTrue(any("money lives in plans/spend/" in m for m in self.messages()))
+
+    def test_usd_marker_defects_are_errors(self) -> None:
+        path = self.fixture.add_experiment()
+        for label, block in (
+            ("unclosed", "<!-- usd: measured — x -->\n$1.00\n"),
+            ("stray close", "<!-- /usd -->\n"),
+            ("unknown label", "<!-- usd: guess — x -->\n$1\n<!-- /usd -->\n"),
+            ("no reason", "<!-- usd: parameter -->\n$1\n<!-- /usd -->\n"),
+            ("nested", "<!-- usd: measured — a -->\n<!-- usd: measured — b -->\n<!-- /usd -->\n"),
+            ("malformed", "<!-- usd measured x -->\n"),
+        ):
+            with self.subTest(label=label):
+                path.write_text(
+                    COMPLETED_EXPERIMENT.replace("The metric increased.", "The metric increased.\n\n" + block),
+                    encoding="utf-8",
+                )
+                _, issues = validator.validate(self.root)
+                self.assertTrue(any(i.level == "ERROR" and "usd marker" in i.message for i in issues), [i.message for i in issues])
+
     def test_math_spans_and_units_in_records_are_clean(self) -> None:
         path = self.fixture.add_experiment()
         for snippet in (

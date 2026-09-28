@@ -66,6 +66,10 @@ SPEND_ROW_ID_RE = re.compile(r"^S\d+$")
 SPEND_AMOUNT_RE = re.compile(r"^\d+(?:\.\d+)?$")
 MONEY_RE = re.compile(SCHEMA["experiment"]["money_pattern"])
 MATH_SPAN_RE = re.compile(SCHEMA["experiment"]["math_span_pattern"])
+USD_MARKER_KINDS = tuple(SCHEMA["experiment"]["usd_marker"]["kinds"])
+USD_MARKER_OPEN_RE = re.compile(SCHEMA["experiment"]["usd_marker"]["open_pattern"])
+USD_MARKER_CLOSE_RE = re.compile(SCHEMA["experiment"]["usd_marker"]["close_pattern"])
+USD_MARKER_PREFIX_RE = re.compile(SCHEMA["experiment"]["usd_marker"]["prefix_pattern"])
 REVIEW_LEDGER_FILE = SCHEMA["review_ledger"]["file"]
 REVIEW_REGISTER_HEADING = SCHEMA["review_ledger"]["register_heading"]
 REVIEW_REGISTER_COLUMNS = SCHEMA["review_ledger"]["register_columns"]
@@ -891,11 +895,45 @@ def validate_spend(root: Path, issues: list[Issue]) -> None:
 
 
 def validate_money_in_records(root: Path, issues: list[Issue]) -> None:
+    """Report currency in experiment records outside `usd:` markers.
+
+    A marker wraps lines whose dollars are data: `measured` for a simulator's
+    objective, `parameter` for an external market input whose source it names.
+    It scopes lines rather than files, so a simulator table cannot license a
+    rental-cost line beside it. Each record's marked line count is reported as a
+    NOTE so growth in exemptions stays visible.
+    """
     for path in experiment_record_paths(root):
         text = read_text(path, issues)
         if text is None:
             continue
+        open_at: int | None = None
+        open_kind = ""
+        marked: dict[str, int] = {}
         for line_number, line in enumerate(text.splitlines(), start=1):
+            closer = USD_MARKER_CLOSE_RE.search(line)
+            opener = USD_MARKER_OPEN_RE.search(line)
+            if closer:
+                if open_at is None:
+                    issues.append(Issue("ERROR", path, f"line {line_number}: `<!-- /usd -->` closes no open usd marker"))
+                open_at = None
+                continue
+            if opener:
+                kind, reason = opener.group("kind"), opener.group("reason")
+                if open_at is not None:
+                    issues.append(Issue("ERROR", path, f"line {line_number}: usd marker opened while the one at line {open_at} is still open"))
+                if kind not in USD_MARKER_KINDS:
+                    issues.append(Issue("ERROR", path, f"line {line_number}: usd marker label {kind!r} is not one of {', '.join(USD_MARKER_KINDS)}"))
+                if not reason:
+                    issues.append(Issue("ERROR", path, f"line {line_number}: usd marker needs a reason naming its source or the model it feeds"))
+                open_at, open_kind = line_number, kind
+                continue
+            if USD_MARKER_PREFIX_RE.search(line):
+                issues.append(Issue("ERROR", path, f"line {line_number}: malformed usd marker; use `<!-- usd: measured|parameter — reason -->`"))
+                continue
+            if open_at is not None:
+                marked[open_kind] = marked.get(open_kind, 0) + 1
+                continue
             without_math = MATH_SPAN_RE.sub(" ", line)
             match = MONEY_RE.search(without_math)
             if match:
@@ -907,6 +945,11 @@ def validate_money_in_records(root: Path, issues: list[Issue]) -> None:
                         "records carry units and job ids, money lives in plans/spend/",
                     )
                 )
+        if open_at is not None:
+            issues.append(Issue("ERROR", path, f"line {open_at}: usd marker is never closed with `<!-- /usd -->`"))
+        if marked:
+            detail = ", ".join(f"{kind} {count}" for kind, count in sorted(marked.items()))
+            issues.append(Issue("NOTE", path, f"{sum(marked.values())} lines inside usd markers ({detail})"))
 
 
 def validate_review_register(path: Path, body: str, issues: list[Issue]) -> None:

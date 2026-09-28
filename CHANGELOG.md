@@ -14,6 +14,12 @@
   ledger row, and no longer reads `plans/spend/` as plans. See
   [Spend and units](skills/research-lab-notebook/references/spend.md) and the
   [cost guide](https://research-notebook.osteele.com/guide/costs/).
+- Dollars that are data rather than spend stay in a record inside
+  `<!-- usd: measured|parameter — reason -->` … `<!-- /usd -->`: `measured` for
+  a simulator's objective, `parameter` for an external market input whose
+  source the reason names. The validator skips marked lines, reports malformed
+  markers, and adds a NOTE with each record's marked line count. See
+  [Prices as data](skills/research-lab-notebook/references/spend.md#prices-as-data).
 - An optional `REVIEW-LEDGER.md` records independent reviews, open findings,
   and gates. The validator checks its register and findings table shapes when
   the file exists. See
