@@ -123,7 +123,10 @@ it does not waive later gates.
    registration, instrument checks, pilots, and run identity. Apply the
    predeclared decision rules to positive, null, and failed outcomes alike.
    Preserve the original design and predictions when the executed method
-   deviates; record the deviation and its timing separately.
+   deviates; record the deviation and its timing as a `## Decisions` entry in
+   the experiment record. A branch chosen where the plan left the choice to
+   the executing session is an entry in the plan's `## Decisions`, written
+   before acting on it ([Plans](plans.md#decisions)).
 4. Process each result into durable evidence using the experiment workflow.
    Preserve raw artifacts, provenance, uncertainties, and limitations. Review
    analysis and interpretation before synthesis or publication use. A proposed

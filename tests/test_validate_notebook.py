@@ -290,6 +290,28 @@ class NotebookValidationTests(unittest.TestCase):
             ["Informed by link [[EXP-000-missing]] does not resolve to a notebook file"],
         )
 
+    def test_decisions_entries_are_dated_ordered_and_linked(self) -> None:
+        path = self.fixture.add_experiment()
+        path.write_text(
+            COMPLETED_EXPERIMENT
+            + "\n## Decisions\n\n"
+            + "- **2026-09-02** — Rotated order rather than cyclic, after\n"
+            + "  [[EXP-001-synthetic-check]] showed carryover. Source: review.\n"
+            + "- **2026-09-01** — Comparator pinned rather than tuned.\n"
+            + "- Undated choice of [[EXP-000-missing]].\n",
+            encoding="utf-8",
+        )
+        self.assertEqual(
+            sorted(self.messages()),
+            sorted(
+                [
+                    "Decisions link [[EXP-000-missing]] does not resolve to a notebook file",
+                    "Decisions entries run newest last; 2026-09-01 follows 2026-09-02",
+                    "Decisions entry lacks a leading **YYYY-MM-DD** date",
+                ]
+            ),
+        )
+
     def test_revision_letter_suffix_is_a_valid_id(self) -> None:
         experiment = self.fixture.add_experiment("EXP-001b-synthetic-check.md")
         experiment.write_text(
@@ -525,6 +547,16 @@ class NotebookValidationTests(unittest.TestCase):
             PLAN, encoding="utf-8"
         )
         self.assertEqual(self.messages(), [])
+
+    def test_plan_decisions_are_validated(self) -> None:
+        plans = self.root / "plans"
+        plans.mkdir()
+        (plans / "2026-08-11-synthetic-control.md").write_text(
+            PLAN + "\n## Decisions\n\n- Ran phase 2 before phase 1.\n", encoding="utf-8"
+        )
+        self.assertEqual(
+            self.messages(), ["Decisions entry lacks a leading **YYYY-MM-DD** date"]
+        )
 
     def test_plan_created_date_must_match_filename(self) -> None:
         plans = self.root / "plans"

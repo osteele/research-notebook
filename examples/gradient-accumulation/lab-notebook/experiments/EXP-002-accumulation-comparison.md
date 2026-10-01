@@ -48,6 +48,17 @@ seed at or above it fails P2.
 - **If P1 and P2 hold**: support a synthetic-scale equivalence finding.
 - **Otherwise**: keep RQ1 open and report the failing seeds.
 
+## Decisions
+
+- **2026-08-14** — Kept the 0.02 margin rather than tightening it to 0.01 after
+  [[EXP-001-accumulation-pilot]] came in at 0.004: a margin chosen after seeing
+  the pilot would depend on the result it is meant to judge. Costs sensitivity
+  to differences between 0.01 and 0.02. Source: pilot-gate review.
+- **2026-08-14** — Reused seed 1 rather than drawing seeds 4 to 6: the paired
+  comparison stays anchored to the pilot. Costs one fresh seed; E1 is a
+  replication at seed 1 and a fresh test only at seeds 2 and 3. Source:
+  pilot-gate review.
+
 ## Human review
 
 - **Design**: paired-seed comparison approved after the pilot gate.

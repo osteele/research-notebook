@@ -42,6 +42,7 @@ join), never stored.
 | claim → publication | `CLAIMS.md` Paper cell | when a paper consumes it | validator |
 | experiment → claim (refutation only) | experiment `## Conclusion` (`Refutes C12`) | when evidence refutes | prose |
 | plan → its completion evidence | `## Completion report` links | at terminal status | validator (heading presence) |
+| plan or experiment → what settled a choice | `## Decisions` entry links | when the choice is made | validator (dated entries, newest last, link resolution) |
 | terminal plan → correction | retraction notice beneath the affected passage | when a correction is applied | the retracting session's sweep |
 
 Two asymmetries look like omissions until the rule behind them is known.

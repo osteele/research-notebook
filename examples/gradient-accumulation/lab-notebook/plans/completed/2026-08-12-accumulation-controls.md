@@ -50,6 +50,13 @@ mean and every paired difference are below 0.02. Record [[EXP-002]].
 - Phase 1 evidence was reviewed at the pilot gate before Phase 2 was approved.
 - Phase 2 evidence and the terminal disposition were reviewed before closure.
 
+## Decisions
+
+- **2026-08-16** — Closed the plan as completed rather than adding a
+  real-training phase after [[EXP-002-accumulation-comparison]] passed: the
+  objective was scoped to the simulator. Forecloses any claim about real models
+  from this plan; a replication would be a new plan. Source: closure review.
+
 ## Completion report
 
 Completed on 2026-08-16. Both phases passed their preregistered gates.

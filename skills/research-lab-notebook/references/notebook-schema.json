@@ -37,6 +37,10 @@
       "EXP-045b"
     ]
   },
+  "decisions": {
+    "section": "Decisions",
+    "entry_date_pattern": "^- \\*\\*(\\d{4}-\\d{2}-\\d{2})\\*\\*"
+  },
   "experiment": {
     "annex_suffix": ".annex.md",
     "informed_by_section": "Informed by",

@@ -47,6 +47,9 @@ read-only request does not acquire execution ownership or enter those steps.
 6. Name each estimand with its registration value (`registered`, `found`, or
    `gate`) and record what informed the design. These two facts exist only at
    the design moment and cannot be recovered later.
+7. When a plan or design changes by choosing between credible options, append
+   a dated entry to its `## Decisions` log naming the option that lost. Edit the
+   body freely; never edit an entry.
 
 ## Pause for human review
 

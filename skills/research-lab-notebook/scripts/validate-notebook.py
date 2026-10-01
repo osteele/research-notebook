@@ -23,6 +23,8 @@ FINDING_STATUSES = set(SCHEMA["finding_statuses"])
 LEDGER_FIELDS = set(SCHEMA["ledger"]["required_fields"])
 ANNEX_SUFFIX = SCHEMA["experiment"]["annex_suffix"]
 INFORMED_BY_SECTION = SCHEMA["experiment"]["informed_by_section"]
+DECISIONS_SECTION = SCHEMA["decisions"]["section"]
+DECISION_DATE_RE = re.compile(SCHEMA["decisions"]["entry_date_pattern"])
 ESTIMAND_HEADING_RE = re.compile(SCHEMA["experiment"]["estimand"]["heading_pattern"])
 ESTIMAND_REGISTRATION_RE = re.compile(
     r"^\*\*" + re.escape(SCHEMA["experiment"]["estimand"]["registration_field"]) + r"\*\*:\s*([A-Za-z][\w-]*)"
@@ -191,6 +193,34 @@ def validate_section_links(
             issues.append(Issue("ERROR", path, f"{heading} link {reference} does not resolve"))
 
 
+def validate_decisions(root: Path, path: Path, text: str, issues: list[Issue]) -> None:
+    """A `## Decisions` log: dated entries, newest last, links that resolve."""
+    body = section_body(text, DECISIONS_SECTION)
+    if body is None:
+        return
+    validate_section_links(root, path, text, DECISIONS_SECTION, issues)
+    previous: str | None = None
+    for line in body.splitlines():
+        if not line.startswith("- "):
+            continue
+        match = DECISION_DATE_RE.match(line)
+        if match is None:
+            issues.append(
+                Issue("WARNING", path, f"{DECISIONS_SECTION} entry lacks a leading **YYYY-MM-DD** date")
+            )
+            continue
+        when = match.group(1)
+        if previous is not None and when < previous:
+            issues.append(
+                Issue(
+                    "WARNING",
+                    path,
+                    f"{DECISIONS_SECTION} entries run newest last; {when} follows {previous}",
+                )
+            )
+        previous = when
+
+
 def frontmatter(text: str) -> dict[str, str]:
     if not text.startswith("---\n"):
         return {}
@@ -319,6 +349,7 @@ def validate_experiments(root: Path, issues: list[Issue]) -> None:
                     )
                 )
         validate_section_links(root, path, text, INFORMED_BY_SECTION, issues)
+        validate_decisions(root, path, text, issues)
 
         designed = {"planned", "queued", "running", "in-progress", "pilot-complete", "blocked", "completed"}
         if status in designed:
@@ -638,6 +669,7 @@ def validate_plans(root: Path, issues: list[Issue]) -> None:
             value = metadata.get(field)
             if value is not None and not valid_date(value):
                 issues.append(Issue("ERROR", path, f"{field} must be YYYY-MM-DD"))
+        validate_decisions(root, path, text, issues)
         created = metadata.get("created", "")
         updated = metadata.get("updated", "")
         if file_match and valid_date(created) and created != file_match.group(1):

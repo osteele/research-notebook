@@ -229,6 +229,41 @@ after exploration is not a reserve. Commit the section as soon as it exists so
 version control fixes its date. Omit the section for plans that make no
 confirmatory claim; an empty declaration is not a declaration.
 
+## Decisions
+
+Plans are edited in place during review and execution, so the plan body shows
+the option that was chosen and loses the one that was not. A `## Decisions`
+section keeps the choice: one entry per choice among credible options, dated,
+newest last.
+
+```markdown
+## Decisions
+
+- **2026-09-01** — Ran Phase 1 on one seed rather than three: the gate only
+  needs to show the instrument works. Costs a weaker headroom estimate.
+  Source: design review.
+- **2026-09-12** — After [[EXP-004-headroom-pilot]] showed a ceiling effect,
+  dropped the large-batch arm rather than adding seeds. Forecloses the
+  scaling claim for this plan. Source: owner instruction.
+```
+
+Each entry states the choice, the option that lost, why, what it costs or
+forecloses, and what settled it: a review, an owner instruction, or a tracked
+decision request. Two rules carry the weight:
+
+- **Name the option that lost.** If no one with the same information could
+  credibly have chosen otherwise, the change is an edit, not a decision, and
+  gets no entry. A log of every edit stops being read.
+- **Never edit an entry.** A reversal is a new entry that names the earlier
+  one. The plan body is amended freely; the log is what lets a reader see what
+  it used to say and why it changed.
+
+A choice made after results exist links what had been seen, the plan-level
+counterpart of an experiment's `## Informed by`. A choice that changes one
+experiment's design belongs in that experiment's record. Omit the section until
+the first decision. The validator checks that entries are dated, run newest
+last, and link to notebook files that exist.
+
 ## Completion report
 
 A plan that reaches `completed` carries a `## Completion report` section,

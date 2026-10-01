@@ -146,6 +146,24 @@ The validator checks that every link in this section resolves to a notebook
 file. Research question IDs such as `[[RQ1]]` are exempt because questions
 live inside `QUESTIONS.md`.
 
+### Record design decisions
+
+The design sections are amended in place during review, so they show the option
+chosen and lose the one that was not. Arm order, the comparator, a threshold,
+the decision rule's branches: these are the choices reviewers most often
+contest, and without a log the alternative leaves no trace. Keep them in a
+`## Decisions` section with the same rules as a plan's
+([Plans](plans.md#decisions)): name the option that lost, state what the choice
+costs, cite what settled it, never edit an entry, and reverse a choice only with
+a new one.
+
+**An entry made after results were seen links what had been seen**, even when
+it did not bear on the choice. `## Informed by` records what the designer had
+seen before the design was fixed; a choice made after further results is where
+preregistration weakens unnoticed, and the entry is the only place that records
+it. A deviation of the executed method from the design is also an entry, dated
+when it was decided.
+
 ## Experiment template
 
 ```markdown
@@ -192,6 +210,11 @@ A specific, falsifiable claim.
 
 - **If outcome A**: next action and rationale.
 - **If outcome B**: diagnostic or stop condition.
+
+## Decisions
+
+- **YYYY-MM-DD** — Choice rather than the option that lost: why. Costs or
+  forecloses what. Source: review, owner, or tracked decision.
 
 ## Runs
 

@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added
+
+- Plans and experiment records carry an optional `## Decisions` log: one dated
+  entry per choice among credible options, naming the option that lost, what
+  the choice costs, and what settled it. The body stays editable; entries are
+  never edited, and a reversal is a new entry. An experiment entry made after
+  results were seen links what had been seen. The validator checks that
+  entries are dated, run newest last, and link to notebook files that exist.
+  See [Plans](skills/research-lab-notebook/references/plans.md#decisions) and
+  [Experiments](skills/research-lab-notebook/references/experiments.md#record-design-decisions).
+
 ### Changed
 
 - Notebook schema 7. Money has one home, `plans/spend/`: `AUTHORITY.json`
