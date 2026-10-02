@@ -12,6 +12,9 @@
   entries are dated, run newest last, and link to notebook files that exist.
   See [Plans](skills/research-lab-notebook/references/plans.md#decisions) and
   [Experiments](skills/research-lab-notebook/references/experiments.md#record-design-decisions).
+  A decision rule is not a decision log: the rule states what each outcome
+  will license; the log records which alternative lost when a rule was set or
+  changed.
 
 ### Changed
 

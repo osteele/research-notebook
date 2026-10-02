@@ -164,6 +164,16 @@ preregistration weakens unnoticed, and the entry is the only place that records
 it. A deviation of the executed method from the design is also an entry, dated
 when it was decided.
 
+**A decision rule is not a decision log.** `## Decision rule (a priori)` states,
+before results, what each outcome will license; `## Decisions` records, after
+the fact, a choice and the option that lost. Setting a threshold puts the
+threshold in the rule and, when a credible alternative value was weighed, an
+entry in the log saying which value lost and why. Applying the rule to a result
+is not a decision and gets no entry. Changing the rule after results exist is
+both: amend the rule, and log the change with what had been seen. Write the
+heading exactly `## Decisions`; the validator reads only that heading, and a
+list of rules or actions under it is not a log.
+
 ## Experiment template
 
 ```markdown
